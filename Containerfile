@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-bootc:44
+FROM quay.io/fedora/fedora-bootc:45
 
 # minimal gnome + apps
 RUN dnf install -y --setopt=install_weak_deps=False \
@@ -26,15 +26,19 @@ RUN set -e; \
     d=/usr/share/gnome-shell/extensions; list=""; \
     while read -r u; do \
       case "$u" in ''|\#*) continue;; esac; \
-      p=$(curl -fsSL "https://extensions.gnome.org/extension-info/?uuid=$u&shell_version=$v" \
-          | python3 -c 'import sys,json;print(json.load(sys.stdin)["download_url"])'); \
+      info=$(curl -sS "https://extensions.gnome.org/extension-info/?uuid=$u&shell_version=$v") \
+        || { echo "NETWORK ERROR fetching $u" >&2; exit 1; }; \
+      p=$(printf '%s' "$info" | python3 -c 'import sys,json;s=sys.stdin.read();print(json.loads(s).get("download_url","") if s.lstrip().startswith("{") else "")'); \
+      if [ -z "$p" ]; then echo "SKIP $u: no build for shell $v"; continue; fi; \
       curl -fsSL -o /tmp/e.zip "https://extensions.gnome.org$p"; \
       python3 -m zipfile -e /tmp/e.zip "$d/$u"; \
       if [ -d "$d/$u/schemas" ]; then glib-compile-schemas "$d/$u/schemas"; fi; \
       list="${list:+$list, }'$u'"; \
     done < /tmp/extensions.txt; \
-    mkdir -p /etc/dconf/db/local.d; \
-    printf '[org/gnome/shell]\nenabled-extensions=[%s]\n' "$list" > /etc/dconf/db/local.d/01-extensions; \
+    if [ -n "$list" ]; then \
+      mkdir -p /etc/dconf/db/local.d; \
+      printf '[org/gnome/shell]\nenabled-extensions=[%s]\n' "$list" > /etc/dconf/db/local.d/01-extensions; \
+    fi; \
     rm -f /tmp/e.zip /tmp/extensions.txt
 
 COPY files/dconf /etc/dconf/db/local.d/00
@@ -51,5 +55,10 @@ RUN systemctl enable gdm NetworkManager bluetooth power-profiles-daemon firewall
  && systemctl mask systemd-remount-fs.service
 
 RUN sed -i 's/^NAME=.*/NAME="Xen"/; s/^PRETTY_NAME=.*/PRETTY_NAME="Xen"/' /usr/lib/os-release
+
+RUN mkdir -p /etc/yum.repos.d \
+ && for f in /usr/share/dnf5/repos.d/*.repo; do \
+      [ -e "/etc/yum.repos.d/$(basename "$f")" ] || cp "$f" /etc/yum.repos.d/; \
+    done
 
 RUN bootc container lint

@@ -3,9 +3,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 IMG=localhost/xen:latest
 
-sudo podman build -t $IMG .
+sudo podman build --network=host -t $IMG .
 mkdir -p output
-sudo podman run --rm -it --privileged --pull=newer \
+sudo podman run --network=host --rm -it --privileged --pull=newer \
   --security-opt label=type:unconfined_t \
   -v ./config.toml:/config.toml:ro \
   -v ./output:/output \
