@@ -56,10 +56,5 @@
 - python3-pip 
 - python3-devel 
 
-### Build ISO *Manual way*
-```bash
-git clone https://github.com/xenxaarn/xen && cd xen && ./build.sh
-```
-
 ### License
 [MIT](LICENSE)
