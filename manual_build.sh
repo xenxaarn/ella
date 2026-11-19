@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
-IMG=localhost/xen:latest
+IMG=localhost/ella:latest
 
 sudo podman build --network=host -t $IMG .
 mkdir -p output

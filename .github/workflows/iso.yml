@@ -22,13 +22,13 @@ jobs:
         with:
           builder-image: quay.io/centos-bootc/bootc-image-builder:latest
           config-file: ./config.toml
-          image: ghcr.io/xenxaarn/xen:latest
+          image: ghcr.io/xenxaarn/ella:latest
           chown: ${{ env.UG }}
           types: anaconda-iso
           additional-args: --use-librepo=True --rootfs xfs
       - uses: actions/upload-artifact@v4
         with:
-          name: xen-iso
+          name: ella-iso
           path: ${{ steps.bib.outputs.output-directory }}
           if-no-files-found: error
           compression-level: 0

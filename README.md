@@ -1,6 +1,6 @@
-#  Xen
+#  Ella
 
-***Xen*** is an image based, Immutable Linux Distro built using `bootc` & the filesystem is **readonly**
+***Ella*** is an image based, Immutable Linux Distro built using `bootc` & the filesystem is **readonly**
 
 ![images](images/home.png)
 
@@ -15,9 +15,9 @@
 - enable temporary writable /usr `sudo bootc usr-overlay`
 
 ### Installing apps
-- use https://flathub.org/en
-- rpm-ostree  `sudo rpm-ostree install <package-name>`
--  Appimages
+- Use https://flathub.org/en
+- Appimages
+- DistroBox
 
 ### Apps Pre-installed 
 

@@ -54,7 +54,7 @@ RUN systemctl enable gdm NetworkManager bluetooth power-profiles-daemon firewall
  && systemctl set-default graphical.target \
  && systemctl mask systemd-remount-fs.service
 
-RUN sed -i 's/^NAME=.*/NAME="Xen"/; s/^PRETTY_NAME=.*/PRETTY_NAME="Xen"/' /usr/lib/os-release
+RUN sed -i 's/^NAME=.*/NAME="Ella"/; s/^PRETTY_NAME=.*/PRETTY_NAME="Ella"/' /usr/lib/os-release
 
 RUN mkdir -p /etc/yum.repos.d \
  && for f in /usr/share/dnf5/repos.d/*.repo; do \
