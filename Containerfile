@@ -25,6 +25,15 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     python3 python3-pip python3-devel \
  && dnf clean all
 
+# Tokyo Night theme
+ARG DOTFILES_REF=master
+RUN dnf install -y --setopt=install_weak_deps=False \
+    plank dconf gtk-update-icon-cache levien-inconsolata-fonts \
+ && git clone --depth 1 --branch "${DOTFILES_REF}" https://github.com/xenxaarn/dotfiles /tmp/dots \
+ && /tmp/dots/install.sh --system \
+ && rm -rf /tmp/dots \
+ && dnf clean all
+
 RUN mkdir -p /etc/lightdm/lightdm.conf.d \
  && printf '[Seat:*]\ngreeter-session=lightdm-gtk-greeter\n' \
       > /etc/lightdm/lightdm.conf.d/50-ella.conf
