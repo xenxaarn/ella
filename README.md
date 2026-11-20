@@ -1,6 +1,6 @@
 #  Ella
 
-***Ella*** is an image based, Immutable Linux Distro built using `bootc` & the filesystem is **readonly**
+***Ella*** is an image based, Immutable Linux Distro built using `bootc` & the filesystem is **readonly**. Ella uses XFCE with LightDM instead of GNOME Shell/GDM.
 
 ![images](images/home.png)
 
@@ -22,20 +22,16 @@
 ### Apps Pre-installed 
 
 - firefox
-- image viewer
-- kitty
-- gnome files
-- gnome settings
-- gnome disks
-- vlc
+- Thunar (file manager)
+- XFCE settings
+- XFCE terminal
+- Ristretto (image viewer)
+- Celluloid (media player)
+- GParted and smartmontools
+- Gnote
 - neovim
 - btop
 - fastfetch
-
-### Flatpak apps - not Pre-installed
-**note: these apps install automatically after the os installs**
-
-- obsidian
 
 ### Dev tools Pre-installed
  - gcc

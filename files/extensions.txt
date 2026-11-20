@@ -1,3 +1,0 @@
-blur-my-shell@aunetx
-runcat@kolesnikov.se
-caffeine@patapon.info

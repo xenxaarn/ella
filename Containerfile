@@ -1,56 +1,37 @@
 FROM quay.io/fedora/fedora-bootc:45
 
-# minimal gnome + apps
+# XFCE desktop with lightweight apps
 RUN dnf install -y --setopt=install_weak_deps=False \
-    gnome-shell gdm gnome-session-wayland-session gnome-control-center \
-    nautilus xdg-desktop-portal-gnome xdg-user-dirs-gtk gnome-keyring \
-    loupe adw-gtk3-theme kitty neovim gnome-disk-utility firefox mozilla-openh264 \
-    git curl wget btop fastfetch vlc \
-    NetworkManager-wifi bluez power-profiles-daemon firewalld \
-    pipewire pipewire-pulseaudio wireplumber flatpak gnome-extensions-app \
+    xfce4-session xfce4-panel xfce4-settings xfce4-terminal \
+    xfdesktop xfwm4 xfconf xfce4-appfinder xfce4-power-manager \
+    xfce4-notifyd xfce4-screenshooter xfce4-pulseaudio-plugin \
+    mate-polkit dbus-x11 \
+    thunar thunar-volman tumbler mousepad ristretto \
+    lightdm lightdm-gtk xorg-x11-server-Xorg \
+    firefox mozilla-openh264 \
+    celluloid mpv gparted smartmontools gnote \
+    neovim btop fastfetch git curl wget \
+    NetworkManager-wifi network-manager-applet bluez power-profiles-daemon firewalld \
+    pipewire pipewire-pulseaudio wireplumber flatpak \
+    xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs xdg-utils \
     mesa-dri-drivers mesa-vulkan-drivers linux-firmware \
     rsms-inter-fonts jetbrains-mono-fonts-all google-noto-emoji-fonts \
  && dnf clean all
 
-# dev tools
+# Dev tools
 RUN dnf install -y --setopt=install_weak_deps=False \
     gcc gcc-c++ clang clang-tools-extra cmake ninja-build make gdb lldb valgrind \
     pkgconf-pkg-config openssl-devel \
     python3 python3-pip python3-devel \
  && dnf clean all
 
-# Extensions
-COPY files/extensions.txt /tmp/extensions.txt
-RUN set -e; \
-    v=$(rpm -q --qf '%{VERSION}' gnome-shell); v=${v%%.*}; \
-    d=/usr/share/gnome-shell/extensions; list=""; \
-    while read -r u; do \
-      case "$u" in ''|\#*) continue;; esac; \
-      info=$(curl -sS "https://extensions.gnome.org/extension-info/?uuid=$u&shell_version=$v") \
-        || { echo "NETWORK ERROR fetching $u" >&2; exit 1; }; \
-      p=$(printf '%s' "$info" | python3 -c 'import sys,json;s=sys.stdin.read();print(json.loads(s).get("download_url","") if s.lstrip().startswith("{") else "")'); \
-      if [ -z "$p" ]; then echo "SKIP $u: no build for shell $v"; continue; fi; \
-      curl -fsSL -o /tmp/e.zip "https://extensions.gnome.org$p"; \
-      python3 -m zipfile -e /tmp/e.zip "$d/$u"; \
-      if [ -d "$d/$u/schemas" ]; then glib-compile-schemas "$d/$u/schemas"; fi; \
-      list="${list:+$list, }'$u'"; \
-    done < /tmp/extensions.txt; \
-    if [ -n "$list" ]; then \
-      mkdir -p /etc/dconf/db/local.d; \
-      printf '[org/gnome/shell]\nenabled-extensions=[%s]\n' "$list" > /etc/dconf/db/local.d/01-extensions; \
-    fi; \
-    rm -f /tmp/e.zip /tmp/extensions.txt
-
-COPY files/dconf /etc/dconf/db/local.d/00
-RUN mkdir -p /etc/dconf/profile \
- && printf 'user-db:user\nsystem-db:local\n' > /etc/dconf/profile/user \
- && dconf update
+RUN mkdir -p /etc/lightdm/lightdm.conf.d \
+ && printf '[Seat:*]\ngreeter-session=lightdm-gtk-greeter\n' \
+      > /etc/lightdm/lightdm.conf.d/50-ella.conf
 
 RUN printf 'export EDITOR=nvim\nexport VISUAL=nvim\n' > /etc/profile.d/editor.sh
 
-COPY files/flatpaks.service /usr/lib/systemd/system/flatpaks.service
-
-RUN systemctl enable gdm NetworkManager bluetooth power-profiles-daemon firewalld flatpaks \
+RUN systemctl enable lightdm NetworkManager bluetooth power-profiles-daemon firewalld \
  && systemctl set-default graphical.target \
  && systemctl mask systemd-remount-fs.service
 
