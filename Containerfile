@@ -15,7 +15,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     pipewire pipewire-pulseaudio wireplumber flatpak \
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs xdg-utils \
     mesa-dri-drivers mesa-vulkan-drivers linux-firmware \
-    rsms-inter-fonts jetbrains-mono-fonts-all google-noto-emoji-fonts \
+    rsms-inter-fonts jetbrains-mono-fonts-all google-noto-emoji-fonts gnome-software \
  && dnf clean all
 
 # Dev tools
