@@ -4,8 +4,6 @@
 
 ![images](images/home.png)
 
-![images](images/menu.png)
-
 ### Update & Maintain
 - status and available updates
 ` bootc status `
