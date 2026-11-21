@@ -12,7 +12,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     celluloid mpv gparted smartmontools gnote \
     neovim btop fastfetch git curl wget \
     NetworkManager-wifi network-manager-applet bluez power-profiles-daemon firewalld \
-    pipewire pipewire-pulseaudio wireplumber flatpak \
+    pipewire pipewire-pulseaudio wireplumber flatpak distrobox podman fuse-libs \
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs xdg-utils \
     mesa-dri-drivers mesa-vulkan-drivers linux-firmware \
     rsms-inter-fonts jetbrains-mono-fonts-all google-noto-emoji-fonts gnome-software \
@@ -26,10 +26,13 @@ RUN dnf install -y --setopt=install_weak_deps=False \
  && dnf clean all
 
 # Tokyo Night theme
-ARG DOTFILES_REF=master
+ARG DOTFILES_REF=27e7da15ca3da5993943114643b7c91037c70cd9
 RUN dnf install -y --setopt=install_weak_deps=False \
     plank dconf gtk-update-icon-cache levien-inconsolata-fonts \
- && git clone --depth 1 --branch "${DOTFILES_REF}" https://github.com/xenxaarn/dotfiles /tmp/dots \
+ && git init /tmp/dots \
+ && git -C /tmp/dots remote add origin https://github.com/xenxaarn/dotfiles \
+ && git -C /tmp/dots fetch --depth 1 origin "${DOTFILES_REF}" \
+ && git -C /tmp/dots checkout --detach FETCH_HEAD \
  && /tmp/dots/install.sh --system \
  && rm -rf /tmp/dots \
  && dnf clean all
