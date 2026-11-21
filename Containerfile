@@ -6,7 +6,10 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     xfdesktop xfwm4 xfconf xfce4-appfinder xfce4-power-manager \
     xfce4-notifyd xfce4-screenshooter xfce4-pulseaudio-plugin \
     mate-polkit dbus-x11 \
-    thunar thunar-volman tumbler mousepad ristretto \
+    thunar thunar-volman thunar-archive-plugin tumbler mousepad ristretto file-roller \
+    xfce4-taskmanager xfce4-screensaver \
+    gvfs gvfs-mtp gvfs-smb gvfs-fuse gnome-keyring gnome-keyring-pam \
+    fwupd cups system-config-printer zram-generator-defaults \
     lightdm lightdm-gtk xorg-x11-server-Xorg \
     firefox mozilla-openh264 \
     celluloid mpv gparted smartmontools gnote \
@@ -41,9 +44,12 @@ RUN mkdir -p /etc/lightdm/lightdm.conf.d \
  && printf '[Seat:*]\ngreeter-session=lightdm-gtk-greeter\n' \
       > /etc/lightdm/lightdm.conf.d/50-ella.conf
 
+RUN mkdir -p /etc/flatpak/remotes.d \
+ && curl -fsSL https://dl.flathub.org/repo/flathub.flatpakrepo -o /etc/flatpak/remotes.d/flathub.flatpakrepo
+
 RUN printf 'export EDITOR=nvim\nexport VISUAL=nvim\n' > /etc/profile.d/editor.sh
 
-RUN systemctl enable lightdm NetworkManager bluetooth power-profiles-daemon firewalld \
+RUN systemctl enable lightdm NetworkManager bluetooth power-profiles-daemon firewalld cups.socket \
  && systemctl set-default graphical.target \
  && systemctl mask systemd-remount-fs.service
 
