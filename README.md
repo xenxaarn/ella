@@ -13,9 +13,8 @@
 - enable temporary writable /usr `sudo bootc usr-overlay`
 
 ### Installing apps
-- Use https://flathub.org/en
-- Appimages
-- DistroBox
+- Use GNOME Software or `flatpak` for Flathub apps.
+- AppImages and Distrobox are alternatives.
 
 ### Apps Pre-installed 
 
@@ -27,6 +26,7 @@
 - Celluloid (media player)
 - GParted and smartmontools
 - Gnote
+- Gnome Software
 - neovim
 - btop
 - fastfetch
@@ -44,7 +44,7 @@
 - valgrind 
 - git
 - curl
--  kgconf-pkg-config
+- pkgconf-pkg-config
 - openssl-devel 
 - python3
 - python3-pip 
