@@ -22,7 +22,7 @@ jobs:
         with:
           builder-image: quay.io/centos-bootc/bootc-image-builder:latest
           config-file: ./config.toml
-          image: ghcr.io/xenxaarn/ella:latest
+          image: ghcr.io/xenxaarn/ella:${{ github.sha }}
           chown: ${{ env.UG }}
           types: anaconda-iso
           additional-args: --use-librepo=True --rootfs xfs
