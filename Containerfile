@@ -29,7 +29,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
  && dnf clean all
 
 # Tokyo Night theme
-ARG DOTFILES_REF=27e7da15ca3da5993943114643b7c91037c70cd9
+ARG DOTFILES_REF=36831c5395d3ccd30ae9779e14e6c6beb6956c15
 RUN dnf install -y --setopt=install_weak_deps=False \
     plank dconf gtk-update-icon-cache levien-inconsolata-fonts \
  && git init /tmp/dots \
