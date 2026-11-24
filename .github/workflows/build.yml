@@ -16,9 +16,15 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
-      - run: |
+      - env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          if [ -z "$SIGNING_SECRET" ]; then
+            jq '.transports.docker["ghcr.io/xenxaarn/ella"] = [{"type":"insecureAcceptAnything"}]' policy.json > policy.json.tmp
+            mv policy.json.tmp policy.json
+          fi
           podman build --pull=newer \
             --label org.opencontainers.image.source=https://github.com/xenxaarn/ella \
             -t ghcr.io/xenxaarn/ella:latest \
@@ -36,14 +42,16 @@ jobs:
           COSIGN_PASSWORD: ""
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
         run: |
-          cosign sign --yes --key env://SIGNING_SECRET --tlog-upload=false \
-            --new-bundle-format=false --use-signing-config=false \
-            --registry-referrers-mode=legacy \
-            --registry-username="${{ github.actor }}" \
-            --registry-password="${{ secrets.GITHUB_TOKEN }}" \
-            "ghcr.io/xenxaarn/ella@$(cat digest.txt)"
-          cosign verify --key cosign.pub \
-            --insecure-ignore-tlog=true --new-bundle-format=false \
-            --registry-username="${{ github.actor }}" \
-            --registry-password="${{ secrets.GITHUB_TOKEN }}" \
-            "ghcr.io/xenxaarn/ella@$(cat digest.txt)"
+          if [ -n "$SIGNING_SECRET" ]; then
+            cosign sign --yes --key env://SIGNING_SECRET --tlog-upload=false \
+              --new-bundle-format=false --use-signing-config=false \
+              --registry-referrers-mode=legacy \
+              --registry-username="${{ github.actor }}" \
+              --registry-password="${{ secrets.GITHUB_TOKEN }}" \
+              "ghcr.io/xenxaarn/ella@$(cat digest.txt)"
+            cosign verify --key cosign.pub \
+              --insecure-ignore-tlog=true --new-bundle-format=false \
+              --registry-username="${{ github.actor }}" \
+              --registry-password="${{ secrets.GITHUB_TOKEN }}" \
+              "ghcr.io/xenxaarn/ella@$(cat digest.txt)"
+          fi

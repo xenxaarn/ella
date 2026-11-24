@@ -20,7 +20,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     neovim btop fastfetch git curl wget \
     NetworkManager-wifi network-manager-applet bluez blueman power-profiles-daemon firewalld \
     pipewire pipewire-pulseaudio wireplumber flatpak distrobox podman fuse-libs \
-    xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-xfce xdg-user-dirs xdg-utils \
+    xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs xdg-utils \
     mesa-dri-drivers mesa-vulkan-drivers linux-firmware \
     rsms-inter-fonts jetbrains-mono-fonts-all google-noto-emoji-fonts \
     gcc gcc-c++ clang clang-tools-extra cmake ninja-build make gdb lldb valgrind \
