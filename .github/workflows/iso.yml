@@ -23,7 +23,7 @@ jobs:
           echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
           sed -i "s|ghcr.io/xenxaarn/ella:latest|ghcr.io/xenxaarn/ella@${DIGEST}|" config.toml
       - id: bib
-        uses: osbuild/bootc-image-builder-action@8661cd3832544ad68c12dcde8681b13ab0f56a8d
+        uses: osbuild/bootc-image-builder-action@028e4d28330efe546229eb9cb52aee78174d2347
         with:
           builder-image: quay.io/centos-bootc/bootc-image-builder@sha256:195a21085a38088ba42d18b1875a05b9c2449750f3fb28e08f07e585bfb8ec51
           config-file: ./config.toml
