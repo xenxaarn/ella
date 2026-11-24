@@ -10,7 +10,7 @@ sudo podman run --network=host --rm -it --privileged --pull=newer \
   -v ./config.toml:/config.toml:ro \
   -v ./output:/output \
   -v /var/lib/containers/storage:/var/lib/containers/storage \
-  quay.io/centos-bootc/bootc-image-builder@sha256:195a21085a38088ba42d18b1875a05b9c2449750f3fb28e08f07e585bfb8ec51 \
+  quay.io/centos-bootc/bootc-image-builder@sha256:a829b782ecee4764edcac472d5672a76f20002143618fcfbd17dc1cc7319e642 \
   --type anaconda-iso \
   --rootfs xfs \
   "$IMG"

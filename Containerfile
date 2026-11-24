@@ -28,7 +28,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     python3 python3-pip python3-devel \
     plank dconf gtk-update-icon-cache levien-inconsolata-fonts \
  && dnf clean all \
- && rm -rf /var/cache/* /var/log/* /var/lib/dnf /var/lib/rpm-state /run/dnf
+ && rm -rf /var/cache/* /var/log/* /var/lib/dnf /var/lib/rpm-state /var/lib/xkb/README.compiled /run/dnf /run/cups /run/selinux-policy /tmp/*
 
 ARG DOTFILES_REF=36831c5395d3ccd30ae9779e14e6c6beb6956c15
 RUN git init /tmp/dots \

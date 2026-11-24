@@ -25,7 +25,7 @@ jobs:
       - id: bib
         uses: osbuild/bootc-image-builder-action@028e4d28330efe546229eb9cb52aee78174d2347
         with:
-          builder-image: quay.io/centos-bootc/bootc-image-builder@sha256:195a21085a38088ba42d18b1875a05b9c2449750f3fb28e08f07e585bfb8ec51
+          builder-image: quay.io/centos-bootc/bootc-image-builder@sha256:a829b782ecee4764edcac472d5672a76f20002143618fcfbd17dc1cc7319e642
           config-file: ./config.toml
           image: ghcr.io/xenxaarn/ella@${{ env.DIGEST }}
           chown: ${{ env.UG }}
