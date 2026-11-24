@@ -16,7 +16,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
       - run: |
           podman build --pull=newer \
@@ -27,5 +27,23 @@ jobs:
       - if: github.event_name != 'pull_request'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          podman push ghcr.io/xenxaarn/ella:${{ github.sha }}
+          podman push --digestfile digest.txt ghcr.io/xenxaarn/ella:${{ github.sha }}
           podman push ghcr.io/xenxaarn/ella:latest
+      - if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532
+      - if: github.event_name != 'pull_request'
+        env:
+          COSIGN_PASSWORD: ""
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          cosign sign --yes --key env://SIGNING_SECRET --tlog-upload=false \
+            --new-bundle-format=false --use-signing-config=false \
+            --registry-referrers-mode=legacy \
+            --registry-username="${{ github.actor }}" \
+            --registry-password="${{ secrets.GITHUB_TOKEN }}" \
+            "ghcr.io/xenxaarn/ella@$(cat digest.txt)"
+          cosign verify --key cosign.pub \
+            --insecure-ignore-tlog=true --new-bundle-format=false \
+            --registry-username="${{ github.actor }}" \
+            --registry-password="${{ secrets.GITHUB_TOKEN }}" \
+            "ghcr.io/xenxaarn/ella@$(cat digest.txt)"

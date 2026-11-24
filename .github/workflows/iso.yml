@@ -7,28 +7,45 @@ jobs:
   iso:
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write
       packages: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
         with:
           remove-codeql: true
       - run: |
           echo "UG=$(id -u):$(id -g)" >> "$GITHUB_ENV"
           echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          TOKEN=$(curl -fsSL "https://ghcr.io/token?service=ghcr.io&scope=repository:xenxaarn/ella:pull" | jq -r .token)
+          DIGEST=$(curl -fsSL -D - -o /dev/null -H "Authorization: Bearer ${TOKEN}" -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json" "https://ghcr.io/v2/xenxaarn/ella/manifests/latest" | awk 'tolower($1) == "docker-content-digest:" {gsub(/\r/, "", $2); print $2}')
+          test -n "$DIGEST"
+          echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
+          sed -i "s|ghcr.io/xenxaarn/ella:latest|ghcr.io/xenxaarn/ella@${DIGEST}|" config.toml
       - id: bib
         uses: osbuild/bootc-image-builder-action@8661cd3832544ad68c12dcde8681b13ab0f56a8d
         with:
-          builder-image: quay.io/centos-bootc/bootc-image-builder:latest
+          builder-image: quay.io/centos-bootc/bootc-image-builder@sha256:195a21085a38088ba42d18b1875a05b9c2449750f3fb28e08f07e585bfb8ec51
           config-file: ./config.toml
-          image: ghcr.io/xenxaarn/ella:${{ github.sha }}
+          image: ghcr.io/xenxaarn/ella@${{ env.DIGEST }}
           chown: ${{ env.UG }}
           types: anaconda-iso
           additional-args: --use-librepo=True --rootfs xfs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ella-iso
           path: ${{ steps.bib.outputs.output-directory }}
           if-no-files-found: error
           compression-level: 0
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISO=$(find "${{ steps.bib.outputs.output-directory }}" -name '*.iso' | head -n1)
+          sha256sum "$ISO" > "$ISO.sha256sum"
+          TAG="v$(date -u +%Y.%m.%d)-${GITHUB_SHA:0:7}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ISO" "$ISO.sha256sum" --clobber
+          else
+            gh release create "$TAG" "$ISO" "$ISO.sha256sum" --title "$TAG"
+          fi
