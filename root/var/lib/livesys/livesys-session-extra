@@ -1,0 +1,32 @@
+#!/bin/bash
+# Runs as root at live boot only.
+set -e
+
+# Launcher for the app menu.
+cat >/usr/share/applications/ella-installer.desktop <<'EOT'
+[Desktop Entry]
+Type=Application
+Name=Install Ella
+Comment=Install Ella to disk
+Exec=xfce4-terminal --maximize --title="Install Ella" -x /usr/bin/ella-install
+Icon=system-software-install
+Terminal=false
+Categories=System;
+EOT
+
+# Open the installer as soon as the live desktop is up.
+mkdir -p /etc/xdg/autostart
+cat >/etc/xdg/autostart/ella-installer.desktop <<'EOT'
+[Desktop Entry]
+Type=Application
+Name=Install Ella
+Exec=xfce4-terminal --maximize --title="Install Ella" -x /usr/bin/ella-install
+OnlyShowIn=XFCE;
+EOT
+
+rm -f /home/liveuser/Desktop/liveinst.desktop /etc/xdg/autostart/liveinst-setup.desktop
+
+# ella-install re-runs itself through "sudo -n".
+mkdir -p /etc/sudoers.d
+echo '%wheel ALL=(root) NOPASSWD: /usr/bin/ella-install' >/etc/sudoers.d/ella-installer
+chmod 0440 /etc/sudoers.d/ella-installer

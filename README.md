@@ -1,20 +1,24 @@
 #  Ella
 
-***Ella*** is an image based, Immutable Linux Distro built using `bootc` & the filesystem is **readonly**. Ella uses XFCE with LightDM instead of GNOME Shell/GDM.
+***Ella*** is a Fedora desktop with XFCE and LightDM themed Tokyo Night & is built with *KIWI NG*. 
 
 ![images](images/home.png)
 
+### Install
+Boot the ISO. The live desktop opens the terminal installer (UEFI only, LUKS2 + Btrfs). It copies the live image to disk, so no network is needed. .
+
+### Build the ISO
+```
+sudo ./build.sh                 # in a privileged Fedora 45 container (Podman/Docker)
+sudo ./build.sh --native        # directly on a Fedora 45 host
+```
+
 ### Update & Maintain
-- status and available updates
-` bootc status `
-- upgrade to latest version
-`sudo bootc upgrade && sudo systemctl reboot`
-- rollback to a previous version `sudo bootc rollback && systemctl reboot`
-- enable temporary writable /usr `sudo bootc usr-overlay`
+`sudo dnf upgrade --refresh && sudo systemctl reboot`
 
 ### Installing apps
 - Use GNOME Software or `flatpak` for Flathub apps.
-- AppImages and Distrobox are alternatives.
+- `dnf install` for Fedora packages.
 
 ### Apps Pre-installed 
 
