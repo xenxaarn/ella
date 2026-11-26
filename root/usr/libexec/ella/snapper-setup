@@ -1,0 +1,13 @@
+#!/bin/bash
+# First boot: create the Snapper config for / (Btrfs only). Snapshots are taken
+# around dnf transactions and cleaned up automatically; no timeline snapshots.
+set -euo pipefail
+
+[[ $(findmnt -no FSTYPE /) == btrfs ]] || exit 0
+
+snapper -c root create-config /
+snapper -c root set-config \
+  TIMELINE_CREATE=no \
+  NUMBER_CLEANUP=yes \
+  NUMBER_LIMIT=10 \
+  NUMBER_LIMIT_IMPORTANT=5

@@ -109,6 +109,14 @@
 		<package name="mesa-dri-drivers"/>
 		<package name="mesa-vulkan-drivers"/>
 
+		<!-- Software store, snapshots, menu -->
+		<package name="gnome-software"/>
+		<package name="PackageKit"/>
+		<package name="snapper"/>
+		<package name="libdnf5-plugin-actions"/>
+		<package name="xdg-user-dirs-gtk"/>
+		<package name="xfce4-whiskermenu-plugin"/>
+
 		<!-- System services -->
 		<package name="NetworkManager"/>
 		<package name="NetworkManager-wifi"/>

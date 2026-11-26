@@ -10,7 +10,7 @@ fi
 
 echo "==> shellcheck"
 shellcheck -S warning build.sh config.sh tools/*.sh root/usr/libexec/ella-branding \
-	root/usr/bin/ella-install root/var/lib/livesys/livesys-session-extra
+	root/usr/bin/ella-install root/usr/bin/ella-codecs root/usr/libexec/ella/* root/var/lib/livesys/livesys-session-extra
 shellcheck -s sh root/etc/fstab.script root/etc/profile.d/editor.sh
 
 echo "==> Ella.kiwi"

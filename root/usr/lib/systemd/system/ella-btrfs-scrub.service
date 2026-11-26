@@ -1,0 +1,10 @@
+[Unit]
+Description=Btrfs scrub of /
+ConditionKernelCommandLine=!rd.live.image
+
+[Service]
+Type=oneshot
+ExecCondition=/bin/sh -c '[ "$(findmnt -no FSTYPE /)" = btrfs ]'
+ExecStart=/usr/bin/btrfs scrub start -B -c 3 /
+Nice=19
+IOSchedulingClass=idle

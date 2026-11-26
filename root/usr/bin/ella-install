@@ -29,6 +29,7 @@ USER_PASS=""
 LUKS_PASS=""
 TZ_NAME="UTC"
 KB_LAYOUT="us"
+LOCALE_NAME="en_US.UTF-8"
 
 P_ESP="" P_BOOT="" P_LUKS=""
 LUKS_UUID="" BTRFS_UUID="" BOOT_UUID="" ESP_UUID=""
@@ -256,13 +257,20 @@ prompts() {
     KB_LAYOUT=$(localectl list-x11-keymap-layouts | gum filter --header "Keyboard layout" --placeholder "type to search") || exit 0
   fi
 
+  # Language
+  if gum confirm --default=true "Language: $LOCALE_NAME?"; then
+    :
+  else
+    LOCALE_NAME=$(localectl list-locales | grep -i 'utf-\?8' | gum filter --header "Language" --placeholder "type to search") || exit 0
+  fi
+
   # Final confirmation, with the exact device.
   local model size
   model=$(lsblk -dn -o MODEL "$DISK" | sed 's/[[:space:]]*$//')
   size=$(lsblk -dn -o SIZE "$DISK" | tr -d '[:space:]')
   gum style --border rounded --border-foreground 196 --padding "1 3" --margin "1 0" \
     "ERASE $DISK" "${size}  ${model:-unknown model}" "" \
-    "user: $NEW_USER    host: $NEW_HOSTNAME" "tz: $TZ_NAME    keyboard: $KB_LAYOUT"
+    "user: $NEW_USER    host: $NEW_HOSTNAME" "tz: $TZ_NAME    keyboard: $KB_LAYOUT    language: $LOCALE_NAME"
   gum confirm --default=false --affirmative "Erase and install" --negative "Cancel" \
     "This destroys all data on $DISK. Continue?" || {
     echo "Cancelled."
@@ -352,7 +360,7 @@ s_configure() {
   else
     echo "warning: timezone $TZ_NAME not found in target, leaving default" >>"$LOG"
   fi
-  [[ -s $TARGET/etc/locale.conf ]] || echo "LANG=en_US.UTF-8" >"$TARGET/etc/locale.conf"
+  echo "LANG=$LOCALE_NAME" >"$TARGET/etc/locale.conf"
   local console_map=us
   localectl list-keymaps 2>/dev/null | grep -qx "$KB_LAYOUT" && console_map=$KB_LAYOUT
   echo "KEYMAP=$console_map" >"$TARGET/etc/vconsole.conf"
@@ -478,6 +486,7 @@ EOF
 }
 
 s_finish() {
+  cp "$LOG" "$TARGET/var/log/ella-installer.log" 2>/dev/null || true
   sync
   umount -R "$TARGET" || umount -R -l "$TARGET"
   udevadm settle
@@ -495,7 +504,7 @@ main() {
   P_ESP=$(part_path "$DISK" 1)
   P_BOOT=$(part_path "$DISK" 2)
   P_LUKS=$(part_path "$DISK" 3)
-  export DISK P_ESP P_BOOT P_LUKS TARGET CRYPT LOG NEW_HOSTNAME NEW_USER TZ_NAME KB_LAYOUT
+  export DISK P_ESP P_BOOT P_LUKS TARGET CRYPT LOG NEW_HOSTNAME NEW_USER TZ_NAME KB_LAYOUT LOCALE_NAME
   export LUKS_PASS USER_PASS SRC
   export -f run chr
 

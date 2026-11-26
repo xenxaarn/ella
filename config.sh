@@ -10,6 +10,7 @@ echo "Configure image: [$kiwi_iname]..."
 
 /usr/libexec/ella-branding
 
+echo 'nameserver 1.1.1.1' > /etc/resolv.conf
 DOTFILES_REF=36831c5395d3ccd30ae9779e14e6c6beb6956c15
 git init -q /tmp/dots
 git -C /tmp/dots remote add origin https://github.com/xenxaarn/dotfiles
@@ -29,9 +30,17 @@ systemctl enable \
   power-profiles-daemon \
   firewalld \
   cups.socket \
+  fstrim.timer \
+  snapper-cleanup.timer \
+  ella-snapper-setup.service \
+  ella-btrfs-scrub.timer \
   ella-branding.service \
   ella-branding.path
 systemctl set-default graphical.target
+
+if [ -f /etc/xdg/autostart/gnome-software-service.desktop ]; then
+  echo 'Hidden=true' >>/etc/xdg/autostart/gnome-software-service.desktop
+fi
 
 rm -f /etc/machine-id
 echo 'uninitialized' >/etc/machine-id
@@ -54,5 +63,5 @@ for f in /usr/share/applications/liveinst.desktop /usr/share/applications/org.fe
   fi
 done
 
-chmod 0755 /usr/bin/ella-install
+chmod 0755 /usr/bin/ella-install /usr/bin/ella-codecs
 echo "Ella image configuration complete"

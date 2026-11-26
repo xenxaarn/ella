@@ -3,17 +3,26 @@
 set -euo pipefail
 
 file="${OS_RELEASE:-/usr/lib/os-release}"
-name='NAME="Ella"'
-pretty='PRETTY_NAME="Ella"'
 
-if grep -qxF "$name" "$file" && grep -qxF "$pretty" "$file"; then
-  exit 0
-fi
+set_key() { # set_key KEY VALUE
+  local line="$1=\"$2\""
+  if grep -qxF "$line" "$file"; then
+    return
+  elif grep -q "^$1=" "$file"; then
+    sed -i "s|^$1=.*|$line|" "$file"
+  else
+    printf '%s\n' "$line" >>"$file"
+  fi
+}
 
-sed -i \
-  -e "s/^NAME=.*/$name/" \
-  -e "s/^PRETTY_NAME=.*/$pretty/" \
-  "$file"
+set_key NAME "Ella"
+set_key PRETTY_NAME "Ella"
+set_key HOME_URL "https://github.com/xenxaarn/ella"
+set_key DOCUMENTATION_URL "https://github.com/xenxaarn/ella#readme"
+set_key SUPPORT_URL "https://github.com/xenxaarn/ella/issues"
+set_key BUG_REPORT_URL "https://github.com/xenxaarn/ella/issues"
+set_key IMAGE_ID "ella"
+set_key IMAGE_VERSION "0.1"
 
 if command -v restorecon >/dev/null 2>&1; then
   restorecon "$file" || true

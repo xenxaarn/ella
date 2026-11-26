@@ -1,0 +1,3 @@
+# Btrfs snapshot before and after every dnf transaction (no-op without a snapper config).
+pre_transaction:::enabled=host-only:/usr/libexec/ella/snapper-dnf pre
+post_transaction:::enabled=host-only:/usr/libexec/ella/snapper-dnf post

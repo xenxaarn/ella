@@ -1,0 +1,17 @@
+#!/bin/bash
+
+state=/run/ella-snapper.pre
+
+snapper -c root get-config >/dev/null 2>&1 || exit 0
+
+case ${1:-} in
+pre)
+  snapper -c root create -t pre -p -c number -d "dnf" >"$state" 2>/dev/null || rm -f "$state"
+  ;;
+post)
+  [[ -s $state ]] || exit 0
+  snapper -c root create -t post --pre-number "$(cat "$state")" -c number -d "dnf" >/dev/null 2>&1
+  rm -f "$state"
+  ;;
+esac
+exit 0

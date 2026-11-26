@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Enable RPM Fusion and install full ffmpeg (patent-encumbered codecs). Opt-in.
+set -euo pipefail
+
+[[ $EUID -eq 0 ]] || exec sudo "$0" "$@"
+
+echo "This enables the RPM Fusion free + nonfree repositories and replaces"
+echo "ffmpeg-free with ffmpeg so more video/audio formats play."
+read -r -p "Continue? [y/N] " answer
+[[ $answer == [yY]* ]] || exit 0
+
+v=$(rpm -E %fedora)
+dnf install -y \
+  "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${v}.noarch.rpm" \
+  "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${v}.noarch.rpm"
+dnf install -y --allowerasing ffmpeg
+
+echo "Done."
+read -r -p "Press Enter to close. " _

@@ -89,6 +89,21 @@ jobs:
             fi
           done
 
+      - name: Sign checksums (optional, needs the GPG_PRIVATE_KEY secret)
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "GPG_PRIVATE_KEY not set; skipping signature"
+            exit 0
+          fi
+          export GNUPGHOME="$(mktemp -d)"
+          chmod 700 "$GNUPGHOME"
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${GPG_PASSPHRASE:-}" \
+            --armor --detach-sign dist/SHA256SUMS
+
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
