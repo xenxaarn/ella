@@ -4,7 +4,7 @@
 	<description type="system">
 		<author>xenxaarn</author>
 		<contact>xenxaarn</contact>
-		<specification>Ella OS, an XFCE desktop on Fedora (Tokyo Night theme), built with KIWI NG</specification>
+		<specification>Ella OS, a minimal KDE Plasma desktop on Fedora, built with KIWI NG</specification>
 	</description>
 	<preferences>
 		<version>45</version>
@@ -50,46 +50,33 @@
 		<package name="filesystem"/>
 		<package name="grubby"/>
 		<package name="dnf5"/>
-		<package name="fedora-release-workstation"/>
-		<package name="fedora-release-identity-workstation"/>
+		<package name="fedora-release-kde-desktop"/>
 	</packages>
 
 	<packages type="image" patternType="onlyRequired">
-		<!-- XFCE desktop -->
-		<package name="xfce4-session"/>
-		<package name="xfce4-panel"/>
-		<package name="xfce4-settings"/>
-		<package name="xfce4-terminal"/>
-		<package name="xfdesktop"/>
-		<package name="xfwm4"/>
-		<package name="xfconf"/>
-		<package name="xfce4-appfinder"/>
-		<package name="xfce4-power-manager"/>
-		<package name="xfce4-notifyd"/>
-		<package name="xfce4-screenshooter"/>
-		<package name="xfce4-pulseaudio-plugin"/>
-		<package name="xfce4-taskmanager"/>
-		<package name="xfce4-screensaver"/>
-		<package name="mate-polkit"/>
+		<!-- Minimal Plasma desktop and only the KDE counterparts to existing apps -->
+		<package name="plasma-desktop"/>
+		<package name="plasma-workspace"/>
+		<package name="plasma-nm"/>
+		<package name="plasma-pa"/>
+		<package name="powerdevil"/>
+		<package name="polkit-kde"/>
+		<package name="bluedevil"/>
+		<package name="dolphin"/>
+		<package name="kate"/>
+		<package name="gwenview"/>
+		<package name="ark"/>
+		<package name="spectacle"/>
+		<package name="plasma-systemmonitor"/>
+		<package name="kitty"/>
 		<package name="dbus-x11"/>
-		<package name="plank"/>
 		<package name="dconf"/>
-		<package name="gtk-update-icon-cache"/>
 
 		<!-- Files, media, utilities -->
-		<package name="thunar"/>
-		<package name="thunar-volman"/>
-		<package name="thunar-archive-plugin"/>
-		<package name="tumbler"/>
-		<package name="mousepad"/>
-		<package name="ristretto"/>
-		<package name="file-roller"/>
 		<package name="gvfs"/>
 		<package name="gvfs-mtp"/>
 		<package name="gvfs-smb"/>
 		<package name="gvfs-fuse"/>
-		<package name="gnome-keyring"/>
-		<package name="gnome-keyring-pam"/>
 		<package name="celluloid"/>
 		<package name="mpv"/>
 		<package name="gparted"/>
@@ -102,27 +89,31 @@
 		<package name="fastfetch"/>
 
 		<!-- Login, display server -->
-		<package name="lightdm"/>
-		<package name="lightdm-gtk"/>
+		<package name="plasma-login-manager"/>
+		<package name="kde-settings-plasmalogin"/>
 		<package name="xorg-x11-server-Xorg"/>
 		<package name="xorg-x11-drv-libinput"/>
 		<package name="mesa-dri-drivers"/>
+		<package name="libglvnd-gles"/>
 		<package name="mesa-vulkan-drivers"/>
+		<package name="policycoreutils"/>
+		<package name="selinux-policy-targeted"/>
 
 		<!-- Software store, snapshots, menu -->
-		<package name="gnome-software"/>
+		<package name="plasma-discover"/>
+		<package name="plasma-discover-packagekit"/>
+		<package name="plasma-discover-flatpak"/>
 		<package name="PackageKit"/>
+		<package name="PackageKit-backend-dnf5"/>
 		<package name="snapper"/>
 		<package name="libdnf5-plugin-actions"/>
 		<package name="xdg-user-dirs-gtk"/>
-		<package name="xfce4-whiskermenu-plugin"/>
+		<package name="xdg-desktop-portal-kde"/>
 
 		<!-- System services -->
 		<package name="NetworkManager"/>
 		<package name="NetworkManager-wifi"/>
-		<package name="network-manager-applet"/>
 		<package name="bluez"/>
-		<package name="blueman"/>
 		<package name="power-profiles-daemon"/>
 		<package name="firewalld"/>
 		<package name="fwupd"/>
@@ -139,6 +130,7 @@
 		<package name="distrobox"/>
 		<package name="podman"/>
 		<package name="fuse-libs"/>
+		<package name="btrfs-progs"/>
 		<package name="xdg-desktop-portal"/>
 		<package name="xdg-desktop-portal-gtk"/>
 		<package name="xdg-user-dirs"/>

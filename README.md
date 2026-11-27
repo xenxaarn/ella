@@ -1,11 +1,11 @@
 #  Ella
 
-***Ella*** is a Fedora desktop with XFCE and LightDM themed Tokyo Night & is built with *KIWI NG*. 
+***Ella*** is a minimal Fedora KDE Plasma desktop built with *KIWI NG*.
 
 ![images](images/home.png)
 
 ### Install
-Boot the ISO. The live desktop opens the terminal installer (UEFI only, LUKS2 + Btrfs). It copies the live image to disk, so no network is needed.
+Boot the ISO to start a KDE Plasma live desktop; Ella's installer opens in Kitty. It supports UEFI and legacy BIOS; boot the ISO in the firmware mode you want installed. The installer erases the selected disk and installs with LUKS2 + Btrfs. Choose “Exit to live desktop” to close the installer without installing. Installation time depends on the computer and storage; the installer shows phase timings when it finishes. After installation, remove the media and press Enter to reboot.
 
 ### Build the ISO
 ```
@@ -17,7 +17,7 @@ sudo ./build.sh --native        # directly on a Fedora 45 host
 `sudo dnf upgrade --refresh && sudo systemctl reboot`
 
 ### Installing apps
-- Use GNOME Software (Flathub and Fedora packages) or `flatpak` for Flathub apps.
+- Use KDE Discover (Flathub and Fedora packages) or `flatpak` for Flathub apps.
 - `dnf install` for Fedora packages.
 
 ### Snapshots
@@ -41,14 +41,17 @@ LUKS2 passphrase at boot. TPM2 auto-unlock is not set up by default.
 ### Apps Pre-installed 
 
 - firefox
-- Thunar (file manager)
-- XFCE settings
-- XFCE terminal
-- Ristretto (image viewer)
+- KDE Plasma
+- Dolphin (file manager)
+- Kate (text editor)
+- Ark (archive manager)
+- Spectacle (screenshots)
+- Kitty terminal
+- Gwenview (image viewer)
 - Celluloid (media player)
 - GParted and smartmontools
 - Gnote
-- Gnome Software
+- KDE Discover software center
 - neovim
 - btop
 - fastfetch

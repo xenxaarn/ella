@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # ella-install: terminal installer for the Ella live ISO.
 #
-# Layout (UEFI only):
-#   p1  512 MiB  ESP    FAT32       /boot/efi
-#   p2    1 GiB  /boot  ext4        /boot
-#   p3   rest    LUKS2 -> Btrfs     @ -> /, @home -> /home
+# Layouts:
+#   UEFI: p1  512 MiB ESP/FAT32, p2 1 GiB /boot/ext4, p3 rest LUKS2/Btrfs
+#   BIOS: p1  1 MiB BIOS boot,   p2 1 GiB /boot/ext4, p3 rest LUKS2/Btrfs
 #
 # The installed system is an rsync copy of the pristine live image
 # (/run/rootfsbase), so none of the live-session state (liveuser, autologin,
-# autostart entries) is carried over. Needs: gum sgdisk cryptsetup rsync
-# mkfs.{fat,ext4,btrfs} efibootmgr grub2-tools.
+# autostart entries) is carried over. Needs gum, sgdisk, cryptsetup, rsync,
+# mkfs tools, and GRUB BIOS/UEFI packages. efibootmgr is needed in UEFI mode.
 #
 # Dev override: ELLA_SRC=/some/rootfs uses that tree as the copy source.
 # Log: /tmp/ella-installer.log
@@ -35,6 +34,7 @@ P_ESP="" P_BOOT="" P_LUKS=""
 LUKS_UUID="" BTRFS_UUID="" BOOT_UUID="" ESP_UUID=""
 CMDLINE=""
 SRC=""
+BOOT_MODE=""
 SRC_MOUNTED=0
 CRYPT_OPEN=0
 STEP=0
@@ -129,11 +129,11 @@ cleanup() {
   fi
   if ((SRC_MOUNTED)); then umount "$SRC" >/dev/null 2>&1; fi
   if ((CRYPT_OPEN)) && [[ -e /dev/mapper/$CRYPT ]]; then
-    udevadm settle >/dev/null 2>&1
     cryptsetup close "$CRYPT" >/dev/null 2>&1 || {
       sleep 1
       cryptsetup close "$CRYPT" >/dev/null 2>&1
     }
+    udevadm settle --timeout=20 >/dev/null 2>&1 || true
   fi
   if ((rc != 0 && rc != 130)); then
     echo
@@ -154,13 +154,20 @@ preflight() {
   fi
   : >"$LOG"
   ! mountpoint -q "$TARGET" || die "$TARGET is already mounted; unmount it first."
-  [[ -d /sys/firmware/efi ]] || die "UEFI firmware not detected; this installer is UEFI only."
+  if [[ -d /sys/firmware/efi ]]; then
+    BOOT_MODE=uefi
+  else
+    BOOT_MODE=bios
+  fi
   command -v gum >/dev/null || die "gum is not installed."
   local c
   for c in sgdisk cryptsetup rsync mkfs.fat mkfs.ext4 mkfs.btrfs blkid wipefs blockdev partx \
-    udevadm lsblk findmnt chroot efibootmgr; do
+    udevadm lsblk findmnt chroot grub2-install; do
     command -v "$c" >/dev/null || die "missing required command: $c"
   done
+  if [[ $BOOT_MODE == uefi ]]; then
+    command -v efibootmgr >/dev/null || die "missing required command: efibootmgr"
+  fi
 }
 
 find_source() {
@@ -200,16 +207,13 @@ ask_password() { # ask_password "label" -> echoes password
 }
 
 prompts() {
+  local choice disks line firmware=${BOOT_MODE^^}
   clear
   gum style --border rounded --border-foreground 39 --padding "1 3" --margin "1 0" --bold \
-    "Ella installer" "UEFI · LUKS2 · Btrfs"
-
-  local choice
+    "Ella installer" "$firmware · LUKS2 · Btrfs"
   choice=$(gum choose --header "What now?" "Install Ella to disk" "Exit to live desktop") || exit 0
   [[ $choice == "Install Ella to disk" ]] || exit 0
 
-  # Disk
-  local disks line
   disks=$(list_disks)
   [[ -n $disks ]] || die "no usable disk found (need >= ${MIN_DISK_GIB} GiB, not the live USB)."
   line=$(gum choose --header "Target disk (everything on it will be erased)" <<<"$disks") || exit 0
@@ -269,6 +273,8 @@ prompts() {
   model=$(lsblk -dn -o MODEL "$DISK" | sed 's/[[:space:]]*$//')
   size=$(lsblk -dn -o SIZE "$DISK" | tr -d '[:space:]')
   gum style --border rounded --border-foreground 196 --padding "1 3" --margin "1 0" \
+    --bold "Review installation" "Check these details before erasing the disk."
+  gum style --border rounded --border-foreground 196 --padding "1 3" --margin "1 0" \
     "ERASE $DISK" "${size}  ${model:-unknown model}" "" \
     "user: $NEW_USER    host: $NEW_HOSTNAME" "tz: $TZ_NAME    keyboard: $KB_LAYOUT    language: $LOCALE_NAME"
   gum confirm --default=false --affirmative "Erase and install" --negative "Cancel" \
@@ -293,7 +299,11 @@ s_partition() {
   done < <(lsblk -n -p -l -o NAME,TYPE "$DISK" | tac)
   run wipefs -af "$DISK"
   run sgdisk --zap-all "$DISK"
-  run sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$DISK"
+  if [[ $BOOT_MODE == uefi ]]; then
+    run sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI System" "$DISK"
+  else
+    run sgdisk -n 1:0:+1M -t 1:ef02 -c 1:"BIOS boot" "$DISK"
+  fi
   run sgdisk -n 2:0:+1024M -t 2:8300 -c 2:"Ella boot" "$DISK"
   run sgdisk -n 3:0:0 -t 3:8309 -c 3:"Ella LUKS" "$DISK"
   blockdev --rereadpt "$DISK" >>"$LOG" 2>&1 || true
@@ -301,7 +311,9 @@ s_partition() {
   run udevadm settle
   local _
   for _ in {1..50}; do
-    [[ -b $P_ESP && -b $P_BOOT && -b $P_LUKS ]] && return 0
+    if [[ -b $P_BOOT && -b $P_LUKS ]] && { [[ $BOOT_MODE == bios ]] || [[ -b $P_ESP ]]; }; then
+      return 0
+    fi
     sleep 0.2
   done
   echo "partition device nodes did not appear" >&2
@@ -309,7 +321,9 @@ s_partition() {
 }
 
 s_format() {
-  run mkfs.fat -F32 -n EFI "$P_ESP"
+  if [[ $BOOT_MODE == uefi ]]; then
+    run mkfs.fat -F32 -n EFI "$P_ESP"
+  fi
   run mkfs.ext4 -F -q -L ella_boot "$P_BOOT"
 
   printf '%s' "$LUKS_PASS" | run cryptsetup luksFormat --type luks2 --pbkdf argon2id \
@@ -327,8 +341,10 @@ s_format() {
   mkdir -p "$TARGET/home" "$TARGET/boot"
   run mount -o "subvol=@home,$opts" "/dev/mapper/$CRYPT" "$TARGET/home"
   run mount "$P_BOOT" "$TARGET/boot"
-  mkdir -p "$TARGET/boot/efi"
-  run mount "$P_ESP" "$TARGET/boot/efi"
+  if [[ $BOOT_MODE == uefi ]]; then
+    mkdir -p "$TARGET/boot/efi"
+    run mount "$P_ESP" "$TARGET/boot/efi"
+  fi
 }
 
 copy_system() {
@@ -340,9 +356,9 @@ copy_system() {
     --exclude='/boot/loader' --exclude='/boot/initramfs-*' --exclude='/boot/vmlinuz-*' \
     --exclude='/boot/grub2/grub.cfg' --exclude='/boot/efi' \
     "$SRC/" "$TARGET/" 2>>"$LOG" || rc=$?
-  ((rc == 0 || rc == 24)) || die "rsync failed (exit $rc), see $LOG"
+  ((rc == 0 || rc == 24)) || die "system copy failed (exit $rc), see $LOG"
 
-  if [[ -d $SRC/boot/efi ]]; then
+  if [[ $BOOT_MODE == uefi && -d $SRC/boot/efi ]]; then
     rc=0
     rsync -rltD --no-perms --no-owner --no-group --modify-window=2 \
       --exclude='/EFI/fedora/grub.cfg' \
@@ -378,8 +394,10 @@ EOF
 UUID=$BTRFS_UUID  /          btrfs  subvol=@,compress=zstd:1,noatime      0 0
 UUID=$BTRFS_UUID  /home      btrfs  subvol=@home,compress=zstd:1,noatime  0 0
 UUID=$BOOT_UUID   /boot      ext4   defaults                              1 2
-UUID=$ESP_UUID    /boot/efi  vfat   umask=0077,shortname=winnt            0 2
 EOF
+  if [[ $BOOT_MODE == uefi ]]; then
+    printf 'UUID=%s  /boot/efi  vfat  umask=0077,shortname=winnt  0 2\n' "$ESP_UUID" >>"$TARGET/etc/fstab"
+  fi
   echo "luks-$LUKS_UUID UUID=$LUKS_UUID none discard" >"$TARGET/etc/crypttab"
   chmod 600 "$TARGET/etc/crypttab"
 
@@ -449,26 +467,32 @@ EOF
   echo "timing:   kernel-install/dracut $((SECONDS - t))s" >>"$LOG"
   t=$SECONDS
 
-  # GRUB config + the stub the signed grubx64.efi reads from the ESP.
+  # Generate GRUB config for both firmware modes, then install the matching loader.
   mkdir -p "$TARGET/boot/grub2"
   run chr grub2-editenv /boot/grub2/grubenv create
   run chr grub2-mkconfig -o /boot/grub2/grub.cfg
   echo "timing:   grub2-mkconfig $((SECONDS - t))s" >>"$LOG"
-  [[ -f $TARGET/boot/efi/EFI/fedora/shimx64.efi ]] ||
-    {
-      echo "shimx64.efi missing from the image's ESP files" >&2
-      return 1
-    }
-  cat >"$TARGET/boot/efi/EFI/fedora/grub.cfg" <<EOF
+  t=$SECONDS
+  if [[ $BOOT_MODE == uefi ]]; then
+    [[ -f $TARGET/boot/efi/EFI/fedora/shimx64.efi ]] ||
+      {
+        echo "shimx64.efi missing from the image's ESP files" >&2
+        return 1
+      }
+    cat >"$TARGET/boot/efi/EFI/fedora/grub.cfg" <<EOF
 search --no-floppy --fs-uuid --set=dev $BOOT_UUID
 set prefix=(\$dev)/grub2
 export \$prefix
 configfile \$prefix/grub.cfg
 EOF
-  # Boot entry; the fallback path (EFI/BOOT) still works if this fails.
-  efibootmgr --create --disk "$DISK" --part 1 --label "Ella" \
-    --loader '\EFI\fedora\shimx64.efi' >>"$LOG" 2>&1 ||
-    echo "warning: efibootmgr failed; relying on the fallback boot path" >>"$LOG"
+    # Boot entry; the fallback path (EFI/BOOT) still works if this fails.
+    efibootmgr --create --disk "$DISK" --part 1 --label "Ella" \
+      --loader '\EFI\fedora\shimx64.efi' >>"$LOG" 2>&1 ||
+      echo "warning: efibootmgr failed; relying on the fallback boot path" >>"$LOG"
+  else
+    run chr grub2-install --target=i386-pc --recheck "$DISK"
+  fi
+  echo "timing:   bootloader install $((SECONDS - t))s" >>"$LOG"
 
   # SELinux: rsync -X keeps labels if the image has them; otherwise relabel.
   local policy=$TARGET/etc/selinux/targeted/contexts/files/file_contexts ctx
@@ -482,15 +506,13 @@ EOF
       fi
     fi
   fi
-  sync
 }
 
 s_finish() {
   cp "$LOG" "$TARGET/var/log/ella-installer.log" 2>/dev/null || true
-  sync
   umount -R "$TARGET" || umount -R -l "$TARGET"
-  udevadm settle
   cryptsetup close "$CRYPT" || echo "warning: could not close $CRYPT" >>"$LOG"
+  udevadm settle --timeout=20 || echo "warning: udev queue did not settle after closing $CRYPT" >>"$LOG"
 }
 
 # ---------------------------------------------------------------- main
@@ -501,10 +523,14 @@ main() {
   find_source
   prompts
 
-  P_ESP=$(part_path "$DISK" 1)
+  if [[ $BOOT_MODE == uefi ]]; then
+    P_ESP=$(part_path "$DISK" 1)
+  else
+    P_ESP=""
+  fi
   P_BOOT=$(part_path "$DISK" 2)
   P_LUKS=$(part_path "$DISK" 3)
-  export DISK P_ESP P_BOOT P_LUKS TARGET CRYPT LOG NEW_HOSTNAME NEW_USER TZ_NAME KB_LAYOUT LOCALE_NAME
+  export DISK P_ESP P_BOOT P_LUKS BOOT_MODE TARGET CRYPT LOG NEW_HOSTNAME NEW_USER TZ_NAME KB_LAYOUT LOCALE_NAME
   export LUKS_PASS USER_PASS SRC
   export -f run chr
 
@@ -521,11 +547,15 @@ main() {
   LUKS_UUID=$(blkid -s UUID -o value "$P_LUKS")
   BTRFS_UUID=$(blkid -s UUID -o value "/dev/mapper/$CRYPT")
   BOOT_UUID=$(blkid -s UUID -o value "$P_BOOT")
-  ESP_UUID=$(blkid -s UUID -o value "$P_ESP")
+  if [[ $BOOT_MODE == uefi ]]; then
+    ESP_UUID=$(blkid -s UUID -o value "$P_ESP")
+  else
+    ESP_UUID=""
+  fi
   export LUKS_UUID BTRFS_UUID BOOT_UUID ESP_UUID
 
   STEP=$((STEP + 1))
-  gum style "[$STEP/$TOTAL] Copying system"
+  gum style --bold "[$STEP/$TOTAL] Copying system"
   copy_system
   mark "Copying system"
 
@@ -537,10 +567,8 @@ main() {
   local elapsed=$SECONDS
   gum style --border rounded --border-foreground 46 --padding "1 3" --margin "1 0" --bold \
     "Done in ${elapsed}s" "" "${TIMES[@]}" "" "Remove the install media before rebooting."
-  local next
-  next=$(gum choose --header "Next" "Reboot now" "Back to live desktop") || exit 0
-  [[ $next == "Reboot now" ]] && systemctl reboot
-  exit 0
+  read -r -p "Press Enter to reboot." _
+  systemctl reboot
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then

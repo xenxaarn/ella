@@ -11,20 +11,12 @@ echo "Configure image: [$kiwi_iname]..."
 /usr/libexec/ella-branding
 
 echo 'nameserver 1.1.1.1' > /etc/resolv.conf
-DOTFILES_REF=36831c5395d3ccd30ae9779e14e6c6beb6956c15
-git init -q /tmp/dots
-git -C /tmp/dots remote add origin https://github.com/xenxaarn/dotfiles
-git -C /tmp/dots fetch -q --depth 1 origin "$DOTFILES_REF"
-git -C /tmp/dots checkout -q --detach FETCH_HEAD
-/tmp/dots/install.sh --system
-rm -rf /tmp/dots
-
 # Flathub remote.
 mkdir -p /etc/flatpak/remotes.d
 curl -fsSL https://dl.flathub.org/repo/flathub.flatpakrepo -o /etc/flatpak/remotes.d/flathub.flatpakrepo
 
 systemctl enable \
-  lightdm \
+  plasmalogin.service \
   NetworkManager \
   bluetooth \
   power-profiles-daemon \
@@ -36,11 +28,9 @@ systemctl enable \
   ella-btrfs-scrub.timer \
   ella-branding.service \
   ella-branding.path
-systemctl set-default graphical.target
 
-if [ -f /etc/xdg/autostart/gnome-software-service.desktop ]; then
-  echo 'Hidden=true' >>/etc/xdg/autostart/gnome-software-service.desktop
-fi
+# Keep the installed system graphical.
+systemctl set-default graphical.target
 
 rm -f /etc/machine-id
 echo 'uninitialized' >/etc/machine-id

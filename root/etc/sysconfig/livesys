@@ -1,1 +1,2 @@
-livesys_session="xfce"
+# Start a standard KDE Plasma live session.
+livesys_session="kde"

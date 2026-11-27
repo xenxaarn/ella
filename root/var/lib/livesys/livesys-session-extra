@@ -8,20 +8,23 @@ cat >/usr/share/applications/ella-installer.desktop <<'EOT'
 Type=Application
 Name=Install Ella
 Comment=Install Ella to disk
-Exec=xfce4-terminal --maximize --title="Install Ella" -x /usr/bin/ella-install
+Exec=kitty --title="Install Ella" /usr/bin/ella-install
 Icon=system-software-install
 Terminal=false
 Categories=System;
 EOT
 
-# Open the installer as soon as the live desktop is up.
+# Open the installer automatically in the live KDE session.
 mkdir -p /etc/xdg/autostart
 cat >/etc/xdg/autostart/ella-installer.desktop <<'EOT'
 [Desktop Entry]
 Type=Application
 Name=Install Ella
-Exec=xfce4-terminal --maximize --title="Install Ella" -x /usr/bin/ella-install
-OnlyShowIn=XFCE;
+Comment=Install Ella to disk
+Exec=kitty --title="Install Ella" /usr/bin/ella-install
+Icon=system-software-install
+Terminal=false
+OnlyShowIn=KDE;
 EOT
 
 rm -f /home/liveuser/Desktop/liveinst.desktop /etc/xdg/autostart/liveinst-setup.desktop

@@ -2,7 +2,7 @@
 Type=Application
 Name=Install Multimedia Codecs
 Comment=Enable RPM Fusion and install full ffmpeg
-Exec=xfce4-terminal --title="Multimedia Codecs" -x /usr/bin/ella-codecs
+Exec=kitty --title="Multimedia Codecs" /usr/bin/ella-codecs
 Icon=applications-multimedia
 Terminal=false
 Categories=System;Settings;

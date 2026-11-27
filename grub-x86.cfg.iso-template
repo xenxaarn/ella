@@ -2,23 +2,18 @@
 
 set default="0"
 
-if [ "$$grub_platform" == "efi" ]; then
-	function load_video {
-		insmod efi_gop
-		insmod efi_uga
-		insmod video_bochs
-		insmod video_cirrus
-		insmod all_video
-	}
+if [ "$$grub_platform" = "efi" ]; then
+	insmod efi_gop
+	insmod efi_uga
+	insmod video_bochs
+	insmod video_cirrus
+	insmod all_video
 	set basicgfx="nomodeset"
 else
-	function load_video {
-		insmod all_video
-	}
+	insmod all_video
 	set basicgfx="nomodeset vga=791"
 fi
 
-load_video
 set gfxpayload=keep
 insmod gzio
 insmod part_gpt
@@ -32,16 +27,16 @@ set timeout_style=${boot_timeout_style}
 
 search ${search_params}
 
-menuentry "Start ${title}" --class ella --class gnu-linux --class gnu --class os {
+menuentry "Start Ella" --class ella --class gnu-linux --class gnu --class os {
 	linux ($$root)${bootpath}/${kernel_file} ${boot_options}
 	initrd ($$root)${bootpath}/${initrd_file}
 }
-menuentry "Test this media & start ${title}" --class ella --class gnu-linux --class gnu --class os {
+menuentry "Test media & start Ella" --class ella --class gnu-linux --class gnu --class os {
 	linux ($$root)${bootpath}/${kernel_file} ${boot_options} rd.live.check
 	initrd ($$root)${bootpath}/${initrd_file}
 }
 submenu "Troubleshooting -->" {
-	menuentry "Start ${title} in basic graphics mode" --class ella --class gnu-linux --class gnu --class os {
+	menuentry "Start Ella in basic graphics mode" --class ella --class gnu-linux --class gnu --class os {
 		linux ($$root)${bootpath}/${kernel_file} ${boot_options} $${basicgfx}
 		initrd ($$root)${bootpath}/${initrd_file}
 	}
