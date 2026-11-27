@@ -21,6 +21,7 @@ set_key HOME_URL "https://github.com/xenxaarn/ella"
 set_key DOCUMENTATION_URL "https://github.com/xenxaarn/ella#readme"
 set_key SUPPORT_URL "https://github.com/xenxaarn/ella/issues"
 set_key BUG_REPORT_URL "https://github.com/xenxaarn/ella/issues"
+set_key LOGO "ella"
 set_key IMAGE_ID "ella"
 set_key IMAGE_VERSION "0.1"
 

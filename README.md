@@ -1,4 +1,4 @@
-#  Ella
+# Ella <img src="branding/logo.png" width="40" alt="Ella logo">
 
 ***Ella*** is a minimal Fedora KDE Plasma desktop built with *KIWI NG*.
 

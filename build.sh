@@ -51,6 +51,7 @@ done
 if [ "$CLEAN_DEFAULT_OUTPUT" -eq 1 ]; then
   rm -rf -- "$OUTPUT_DIR"
 fi
+./tools/place-branding.sh
 mkdir -p "$OUTPUT_DIR/kiwi-tmp"
 OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd)"
 

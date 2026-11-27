@@ -10,7 +10,7 @@ echo "Configure image: [$kiwi_iname]..."
 
 /usr/libexec/ella-branding
 
-echo 'nameserver 1.1.1.1' > /etc/resolv.conf
+echo 'nameserver 1.1.1.1' >/etc/resolv.conf
 # Flathub remote.
 mkdir -p /etc/flatpak/remotes.d
 curl -fsSL https://dl.flathub.org/repo/flathub.flatpakrepo -o /etc/flatpak/remotes.d/flathub.flatpakrepo
@@ -28,6 +28,13 @@ systemctl enable \
   ella-btrfs-scrub.timer \
   ella-branding.service \
   ella-branding.path
+
+for lnf in /usr/share/plasma/look-and-feel/*/contents/defaults; do
+  [ -f "$lnf" ] || continue
+  grep -q '^\[Wallpaper\]' "$lnf" || continue
+  sed -i '/^\[Wallpaper\]/,/^\[/ s|^Image=.*|Image=Ella|' "$lnf"
+  grep -q '^Image=Ella$' "$lnf" || printf '\n[Wallpaper]\nImage=Ella\n' >>"$lnf"
+done
 
 # Keep the installed system graphical.
 systemctl set-default graphical.target
